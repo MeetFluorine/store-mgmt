@@ -232,7 +232,7 @@ export async function renderDashboard(container) {
       </div>
     </div>
 
-    <div class="admin-grid--split" style="grid-template-columns: 2fr 1fr;">
+    <div class="admin-grid--split">
       <div class="card card-pad">
         <div class="card-header">
           <span class="card-title">Today's Attendance</span>

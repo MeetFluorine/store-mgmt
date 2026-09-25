@@ -36,6 +36,22 @@ ul { list-style: none; margin: 0; padding: 0; }
 
 img { max-width: 100%; display: block; }
 
+/* Every icon in this app is an inline <svg> with no width/height attribute
+   (see js/utils/icons.js) — it relies entirely on CSS for sizing. Most
+   containers set an explicit size, but several (topbar search, buttons,
+   inline icon+label text) never did, so those icons rendered at the
+   browser's ~300x150 default. This safety net makes any *unstyled* icon a
+   sane 1em square; every existing explicit "<selector> svg" rule elsewhere
+   is a class selector and still wins over this plain-tag one. */
+svg { width: 1em; height: 1em; display: inline-block; vertical-align: middle; flex-shrink: 0; }
+
+/* The admin topbar's own search icon — explicit size for a crisp look
+   (1em from the rule above would work too, but this keeps it consistent
+   with the other 17-18px topbar icons regardless of surrounding font-size). */
+.topbar-search svg,
+.select-field svg,
+.date-field svg { width: 16px; height: 16px; }
+
 ::selection { background: var(--brand-orange); color: #fff; }
 
 /* Scrollbars (desktop admin panels) */
@@ -48,6 +64,10 @@ img { max-width: 100%; display: block; }
 .app-shell {
   min-height: 100vh;
 }
+
+:root { box-sizing: border-box; }
+.employee-topbar { padding-top: calc(var(--sp-3) + env(safe-area-inset-top, 0px)); }
+.admin-topbar { height: calc(var(--topbar-height) + env(safe-area-inset-top, 0px)); padding-top: env(safe-area-inset-top, 0px); }
 
 /* Focus visibility for accessibility */
 button:focus-visible,

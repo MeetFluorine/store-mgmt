@@ -67,7 +67,7 @@ export async function renderEmployeeList(container) {
     </div>
     <div class="card card-pad">
       <div class="card-header">
-        <div class="topbar-search" style="width:260px;">${ICONS.search}<input id="emp-search" placeholder="Search employee..." /></div>
+        <div class="topbar-search page-search">${ICONS.search}<input id="emp-search" placeholder="Search employee..." /></div>
       </div>
       <div class="table-wrap">
         <table class="data-table">

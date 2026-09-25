@@ -221,6 +221,15 @@
   color: var(--text-primary);
 }
 .topbar-right { display: flex; align-items: center; gap: var(--sp-4); }
+
+/* An in-page search box (e.g. Employees list) reuses .topbar-search's look
+   but must stay visible and full-width on mobile, unlike the admin topbar's
+   own search which is intentionally hidden below 720px. */
+.page-search { width: 260px; max-width: 100%; }
+@media (max-width: 560px) {
+  .page-search { width: 100%; }
+  .card-header:has(.page-search) { flex-direction: column; align-items: stretch; }
+}
 .icon-btn {
   width: 36px; height: 36px;
   display: flex; align-items: center; justify-content: center;
@@ -341,6 +350,70 @@ table.data-table {
 }
 .action-tile__title { font-weight: 700; font-size: var(--fs-sm); }
 .action-tile__sub { font-size: 11.5px; color: var(--text-muted); }
+
+/* ---- Bottom navigation (mobile: employee + admin, same pattern) ---- */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 40;
+  background: #ffffff;
+  border-top: 1px solid #e4e7ed;
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+  align-items: center;
+  justify-content: space-around;
+  box-shadow: 0 -4px 20px rgba(16, 24, 40, 0.08);
+}
+.bottom-nav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 2px;
+  color: #8a93a3;
+  font-size: 10.5px;
+  font-weight: 600;
+  border-radius: 10px;
+}
+.bottom-nav__item svg { width: 20px; height: 20px; }
+.bottom-nav__item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.bottom-nav__item.active { color: #e8501f; }
+
+/* Elevated centre "punch" action, floating above the bar */
+.bottom-nav__fab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: #171b26;
+  color: #ffffff;
+  margin-top: -30px;
+  flex-shrink: 0;
+  box-shadow: 0 8px 20px rgba(23, 27, 38, 0.35), 0 0 0 4px #ffffff;
+}
+.bottom-nav__fab svg { width: 23px; height: 23px; }
+.bottom-nav__fab:active { transform: scale(0.94); }
+
+/* ---- Mobile hamburger (admin topbar) ---- */
+.btn-hamburger { display: none; }
+
+/* ---- Admin sidebar as a slide-in drawer on phones ---- */
+.sidebar-backdrop {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(11, 18, 32, 0.5);
+  z-index: 55;
+}
+.sidebar-backdrop.show { display: block; }
 
 /* ---- Empty state ---- */
 .empty-state {

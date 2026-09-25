@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Shadowfax Store Attendance</title>
 <link rel="icon" type="image/svg+xml" href="assets/logo/mark.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -85,6 +85,7 @@
         <button class="icon-btn" id="btn-employee-logout" title="Logout" style="background:transparent;border-color:#2a3552;color:#9aa5b8;"></button>
       </div>
       <main id="employee-main" class="employee-main"></main>
+      <nav class="bottom-nav" id="employee-bottom-nav"></nav>
     </div>
   </section>
 
@@ -113,11 +114,14 @@
       </aside>
       <div class="admin-content">
         <header class="admin-topbar">
+          <button class="icon-btn btn-hamburger" id="btn-admin-menu" title="Menu"></button>
           <div class="topbar-search"></div>
           <div class="topbar-right" id="admin-topbar-right"></div>
         </header>
         <main id="admin-main" class="admin-main"></main>
       </div>
+      <nav class="bottom-nav" id="admin-bottom-nav"></nav>
+      <div class="sidebar-backdrop" id="admin-sidebar-backdrop"></div>
     </div>
   </section>
 

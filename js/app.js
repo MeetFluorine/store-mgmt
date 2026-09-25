@@ -107,7 +107,19 @@ function initAdminChrome() {
       ${ICONS.chevronDown}
     </div>
   `;
+
+  initAdminDrawer();
 }
+
+// Curated subset of ADMIN_NAV shown on the mobile bottom bar. "more" opens
+// the full sidebar as a slide-in drawer (see initAdminDrawer below).
+const ADMIN_BOTTOM_NAV = [
+  ADMIN_NAV[0], // dashboard
+  ADMIN_NAV[1], // approvals
+  ADMIN_NAV[3], // employees
+  ADMIN_NAV[4], // stores
+  { key: "more", label: "More", icon: ICONS.menu, href: "#" }
+];
 
 function setActiveNav(key) {
   document.querySelectorAll(".nav-item").forEach((el) => {
@@ -115,9 +127,56 @@ function setActiveNav(key) {
   });
 }
 
+function openAdminDrawer() {
+  document.querySelector(".admin-sidebar").classList.add("is-open");
+  document.getElementById("admin-sidebar-backdrop").classList.add("show");
+}
+function closeAdminDrawer() {
+  document.querySelector(".admin-sidebar").classList.remove("is-open");
+  document.getElementById("admin-sidebar-backdrop").classList.remove("show");
+}
+
+function initAdminDrawer() {
+  const bottomNav = document.getElementById("admin-bottom-nav");
+  bottomNav.innerHTML = ADMIN_BOTTOM_NAV.map(
+    (item) => `<a class="nav-item bottom-nav__item" data-key="${item.key}" href="${item.href}">${item.icon}<span>${item.label}</span></a>`
+  ).join("");
+
+  bottomNav.querySelector('[data-key="more"]').addEventListener("click", (e) => {
+    e.preventDefault();
+    openAdminDrawer();
+  });
+  document.getElementById("btn-admin-menu").innerHTML = ICONS.menu;
+  document.getElementById("btn-admin-menu").addEventListener("click", openAdminDrawer);
+  document.getElementById("admin-sidebar-backdrop").addEventListener("click", closeAdminDrawer);
+
+  // Any real nav link (sidebar or bottom bar) should close the drawer once tapped.
+  document.querySelectorAll(".nav-item").forEach((el) => {
+    if (el.getAttribute("data-key") !== "more") {
+      el.addEventListener("click", closeAdminDrawer);
+    }
+  });
+}
+
 // ---------------------------------------------------------
 // Employee shell chrome
 // ---------------------------------------------------------
+const EMPLOYEE_NAV = [
+  { key: "home", label: "Home", icon: ICONS.home, href: "#/employee/home" },
+  { key: "history", label: "History", icon: ICONS.calendar, href: "#/employee/history" },
+  { key: "punch", label: "Punch", icon: ICONS.scan, href: "#/employee/home", fab: true },
+  { key: "account", label: "Account", icon: ICONS.settings, href: "#/employee/account" }
+];
+
+function initEmployeeBottomNav() {
+  const nav = document.getElementById("employee-bottom-nav");
+  nav.innerHTML = EMPLOYEE_NAV.map((item) =>
+    item.fab
+      ? `<a class="bottom-nav__fab" href="${item.href}" title="${item.label}">${item.icon}</a>`
+      : `<a class="nav-item bottom-nav__item" data-key="${item.key}" href="${item.href}">${item.icon}<span>${item.label}</span></a>`
+  ).join("");
+}
+
 function initEmployeeChrome() {
   document.getElementById("btn-employee-logout").innerHTML = ICONS.logout;
   document.getElementById("btn-employee-logout").addEventListener("click", async () => {
@@ -125,6 +184,7 @@ function initEmployeeChrome() {
     clearContext();
     window.location.hash = "#/login";
   });
+  initEmployeeBottomNav();
 }
 
 // ---------------------------------------------------------
@@ -790,6 +850,7 @@ async function handleRoute() {
     }
 
     const sub = rest[0] || "home";
+    setActiveNav(sub === "verify" || sub === "success" ? "home" : sub);
     if (sub === "home") renderEmployeeHome();
     else if (sub === "verify") renderVerify(rest[1] || "in");
     else if (sub === "success") renderPunchSuccess();

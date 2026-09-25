@@ -23,10 +23,54 @@
   .topbar-search { width: 180px; }
 }
 
+/* ---- Phones: sidebar becomes a slide-in drawer, bottom nav takes over ---- */
+@media (max-width: 760px) {
+  .bottom-nav { display: flex; }
+  .btn-hamburger { display: flex; }
+  .topbar-search { display: none; }
+
+  .admin-shell { grid-template-columns: 1fr; }
+
+  .admin-sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 82%;
+    max-width: 300px;
+    height: 100vh;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    z-index: 60;
+    box-shadow: 0 0 32px rgba(0,0,0,0.25);
+  }
+  .admin-sidebar.is-open { transform: translateX(0); }
+
+  /* full labels inside the drawer, unlike the compact tablet icon-rail */
+  .admin-sidebar .brand__text,
+  .admin-sidebar .nav-item span,
+  .admin-sidebar .nav-group-label,
+  .admin-sidebar .sidebar-footer__name,
+  .admin-sidebar .sidebar-footer__role { display: block; }
+  .admin-sidebar .nav-item { justify-content: flex-start; }
+  .admin-sidebar .brand { justify-content: flex-start; }
+
+  .admin-topbar { padding: 0 var(--sp-4); }
+  .admin-main { padding: var(--sp-4); padding-bottom: 92px; }
+  .employee-main { padding-bottom: 92px; }
+
+  .page-header h1 { font-size: 18px; }
+  .kpi-value { font-size: 20px; }
+  .btn-lg { padding: 12px 18px; }
+}
+
+@media (min-width: 761px) {
+  .bottom-nav, .sidebar-backdrop { display: none !important; }
+}
+
 @media (max-width: 720px) {
   .admin-grid { grid-template-columns: repeat(2, 1fr); }
   .admin-main { padding: var(--sp-4); }
   .topbar-search { display: none; }
+  .topbar-search.page-search { display: flex; } /* in-page search stays visible */
   .store-card-grid { grid-template-columns: 1fr; }
   .detail-grid { grid-template-columns: 1fr; }
   .donut-wrap { flex-direction: column; align-items: stretch; }
@@ -37,7 +81,12 @@
 }
 
 /* ---- Employee: comfortable on very small phones ---- */
+@media (max-width: 400px) {
+  .verify-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 360px) {
   .stat-pair { grid-template-columns: 1fr; }
   .summary-grid { grid-template-columns: 1fr; }
+  .login-card { padding: var(--sp-4); }
 }
