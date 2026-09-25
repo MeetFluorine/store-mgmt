@@ -36,13 +36,18 @@ create table if not exists stores (
   store_code text unique not null,
   store_name text not null,
   address text,
-  latitude double precision not null,
-  longitude double precision not null,
+  latitude double precision,
+  longitude double precision,
   allowed_radius integer not null default 100, -- meters
   status text not null default 'active' check (status in ('active', 'inactive')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Employee's store choice at self-registration time (see
+-- employees table above) — added here, after stores exists, to
+-- avoid a forward reference.
+alter table employees add column if not exists requested_store_id uuid references stores(id);
 
 -- ---------------------------------------------------------
 -- employee_store_mapping (effective-dated, preserves history)

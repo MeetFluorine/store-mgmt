@@ -199,6 +199,16 @@ function renderNoStoreScreen() {
   `;
 }
 
+function renderStoreNotConfiguredScreen(storeName) {
+  employeeMain.innerHTML = `
+    <div class="att-header">
+      <div class="att-header__icon" style="background:var(--color-warning-bg); color:var(--color-warning);">${ICONS.mapPin}</div>
+      <h2>Store Location Not Set Up</h2>
+      <p>${storeName} doesn't have coordinates configured yet, so location can't be verified. Contact your administrator.</p>
+    </div>
+  `;
+}
+
 // ---------------------------------------------------------
 // EMPLOYEE: Home
 // ---------------------------------------------------------
@@ -377,6 +387,7 @@ async function renderVerify(action) {
   currentVerifyAction = action;
   const { employee, store, faceDescriptors } = ctx;
   if (!store) { renderNoStoreScreen(); return; }
+  if (store.lat == null || store.lng == null) { renderStoreNotConfiguredScreen(store.name); return; }
 
   let state;
   try {

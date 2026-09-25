@@ -17,11 +17,27 @@ export async function signUpEmployee(email, password) {
 }
 
 /**
+ * Active stores for the registration dropdown. Readable without
+ * being signed in yet (see the "anyone can read active stores"
+ * RLS policy) since a person picks their store before they have
+ * an account.
+ */
+export async function fetchActiveStores() {
+  const { data, error } = await supabase
+    .from("stores")
+    .select("id, store_code, store_name")
+    .eq("status", "active")
+    .order("store_name");
+  if (error) throw error;
+  return data || [];
+}
+
+/**
  * Creates the employee's own pending row with their chosen
  * Employee ID and captured location. Throws a friendly error if
  * the Employee ID is already taken (Postgres unique violation).
  */
-export async function createPendingEmployee({ authUserId, employeeCode, name, mobile, requestedStoreName, location }) {
+export async function createPendingEmployee({ authUserId, employeeCode, name, mobile, requestedStoreId, location }) {
   const { data, error } = await supabase
     .from("employees")
     .insert({
@@ -29,7 +45,7 @@ export async function createPendingEmployee({ authUserId, employeeCode, name, mo
       employee_code: employeeCode.trim().toUpperCase(),
       name,
       mobile,
-      requested_store_name: requestedStoreName || null,
+      requested_store_id: requestedStoreId || null,
       status: "pending",
       registration_latitude: location?.latitude ?? null,
       registration_longitude: location?.longitude ?? null,

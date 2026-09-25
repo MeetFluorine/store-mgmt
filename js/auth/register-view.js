@@ -6,7 +6,7 @@
 // =========================================================
 import { ICONS } from "../utils/icons.js";
 import { showToast } from "../utils/notifications.js";
-import { signUpEmployee, createPendingEmployee } from "./register.js";
+import { signUpEmployee, createPendingEmployee, fetchActiveStores } from "./register.js";
 import { getCurrentPosition } from "../gps/location.js";
 import { loadFaceModels } from "../face/model-loader.js";
 import { startCamera, stopCamera } from "../face/camera.js";
@@ -25,7 +25,7 @@ function resetWizard() {
   wizard.samples = [];
 }
 
-export function renderRegisterStart(container) {
+export async function renderRegisterStart(container) {
   resetWizard();
   container.innerHTML = `
     <div class="att-header">
@@ -51,8 +51,11 @@ export function renderRegisterStart(container) {
       </div>
       <div class="field-group">
         <label for="reg-store">Your Store</label>
-        <input id="reg-store" type="text" placeholder="e.g. Pipariya Store" autocomplete="off" />
-        <p style="font-size:11px; color:var(--text-muted); margin-top:4px;">Type the store you work at — your admin will confirm and assign it.</p>
+        <div class="select-field" style="width:100%;">
+          <select id="reg-store" style="width:100%; border:none; background:transparent; outline:none; padding:4px 0;">
+            <option value="">Loading stores...</option>
+          </select>
+        </div>
       </div>
       <div class="field-group">
         <label for="reg-email">Email</label>
@@ -72,6 +75,15 @@ export function renderRegisterStart(container) {
 
   const form = container.querySelector("#register-step1-form");
   const errorBox = container.querySelector("#register-error");
+  const storeSelect = container.querySelector("#reg-store");
+
+  try {
+    const stores = await fetchActiveStores();
+    storeSelect.innerHTML = `<option value="">Select your store...</option>` +
+      stores.map((s) => `<option value="${s.id}">${s.store_name}</option>`).join("");
+  } catch {
+    storeSelect.innerHTML = `<option value="">Couldn't load stores — contact your admin</option>`;
+  }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -80,12 +92,12 @@ export function renderRegisterStart(container) {
     const name = container.querySelector("#reg-name").value.trim();
     const employeeCode = container.querySelector("#reg-code").value.trim();
     const mobile = container.querySelector("#reg-mobile").value.trim();
-    const requestedStoreName = container.querySelector("#reg-store").value.trim();
+    const requestedStoreId = container.querySelector("#reg-store").value;
     const email = container.querySelector("#reg-email").value.trim();
     const pass = container.querySelector("#reg-pass").value;
     const pass2 = container.querySelector("#reg-pass2").value;
 
-    if (!name || !employeeCode || !mobile || !email) return;
+    if (!name || !employeeCode || !mobile || !email || !requestedStoreId) return;
     if (pass.length < 8) {
       errorBox.textContent = "Password must be at least 8 characters.";
       errorBox.classList.add("show");
@@ -114,7 +126,7 @@ export function renderRegisterStart(container) {
       submitBtn.textContent = "Creating account...";
       const { user } = await signUpEmployee(email, pass);
       if (!user) throw new Error("Sign-up did not return a user.");
-      const employee = await createPendingEmployee({ authUserId: user.id, employeeCode, name, mobile, requestedStoreName, location });
+      const employee = await createPendingEmployee({ authUserId: user.id, employeeCode, name, mobile, requestedStoreId, location });
       wizard.employeeId = employee.id;
       wizard.employeeCode = employee.employee_code;
       renderRegisterFace(container);

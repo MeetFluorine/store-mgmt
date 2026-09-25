@@ -1,10 +1,12 @@
 // =========================================================
 // Admin — Pending Approvals
-// The only admin page wired to real Supabase data so far (the
-// rest of the admin console is still mock — see README). Gated
-// by a real admin sign-in since RLS requires app_metadata.role =
-// 'admin' to read/update employees beyond the signed-in user's
-// own row.
+// The employee already chose their store at registration
+// (requested_store_id). Admin's job here is just to review the
+// person + their captured location and approve or reject — no
+// separate store picker needed. Older registrations made before
+// this change only have a free-text requested_store_name (no id);
+// those get a one-off fallback picker so they can still be
+// approved.
 // =========================================================
 import { supabase } from "../supabaseClient.js";
 import { ICONS } from "../utils/icons.js";
@@ -86,8 +88,11 @@ function renderAdminLoginGate(container) {
 }
 
 async function renderPendingList(container, adminUser) {
-  const [{ data: pending, error: pendErr }, { data: stores, error: storeErr }] = await Promise.all([
-    supabase.from("employees").select("id, employee_code, name, mobile, created_at, requested_store_name, registration_latitude, registration_longitude, registration_accuracy").eq("status", "pending").order("created_at", { ascending: true }),
+  const [{ data: pending, error: pendErr }, { data: stores }] = await Promise.all([
+    supabase.from("employees")
+      .select("id, employee_code, name, mobile, created_at, requested_store_name, requested_store_id, registration_latitude, registration_longitude, registration_accuracy, stores:requested_store_id ( store_name, store_code, latitude, longitude )")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true }),
     supabase.from("stores").select("id, store_name, store_code").eq("status", "active").order("store_name")
   ]);
 
@@ -96,14 +101,33 @@ async function renderPendingList(container, adminUser) {
     return;
   }
 
-  const storeOptionsFor = (requestedName) => (stores || []).map((s) => {
-    const isMatch = requestedName && s.store_name.toLowerCase().trim() === requestedName.toLowerCase().trim();
-    return `<option value="${s.id}" ${isMatch ? "selected" : ""}>${s.store_name} (${s.store_code})</option>`;
-  }).join("");
+  const fallbackStoreOptions = (stores || []).map((s) => `<option value="${s.id}">${s.store_name} (${s.store_code})</option>`).join("");
 
   const rows = (pending || []).map((p) => {
     const hasLoc = p.registration_latitude != null && p.registration_longitude != null;
     const mapUrl = hasLoc ? `https://www.google.com/maps?q=${p.registration_latitude},${p.registration_longitude}` : null;
+    const requestedStore = p.stores; // joined via requested_store_id, null for legacy rows
+    const storeHasCoords = requestedStore && requestedStore.latitude != null && requestedStore.longitude != null;
+
+    const storeCell = requestedStore
+      ? `<div style="font-weight:600; font-size:12.5px;">${requestedStore.store_name}</div>
+         <div class="text-muted" style="font-size:11px;">${requestedStore.store_code}</div>
+         ${!storeHasCoords ? `<span class="badge badge--warning" style="margin-top:4px;">${ICONS.alertTriangle.replace('<svg ', '<svg style="width:10px;height:10px;" ')} No coordinates set</span>` : ""}`
+      : p.requested_store_name
+        ? `<div class="text-muted" style="font-size:12px; margin-bottom:6px;">"${p.requested_store_name}" (typed before dropdown existed)</div>
+           <div class="select-field" style="width:200px;">
+             <select data-store-select="${p.id}">
+               <option value="">Assign a store...</option>
+               ${fallbackStoreOptions}
+             </select>
+           </div>`
+        : `<div class="select-field" style="width:200px;">
+             <select data-store-select="${p.id}">
+               <option value="">Assign a store...</option>
+               ${fallbackStoreOptions}
+             </select>
+           </div>`;
+
     return `
     <tr data-row="${p.id}">
       <td>
@@ -116,7 +140,7 @@ async function renderPendingList(container, adminUser) {
         </div>
       </td>
       <td>${p.mobile || "—"}</td>
-      <td>${p.requested_store_name ? `<span class="text-muted" style="font-size:12.5px;">"${p.requested_store_name}"</span>` : `<span class="text-muted" style="font-size:12px;">—</span>`}</td>
+      <td>${storeCell}</td>
       <td>${new Date(p.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</td>
       <td>
         ${hasLoc
@@ -124,16 +148,8 @@ async function renderPendingList(container, adminUser) {
           : `<span class="text-muted" style="font-size:12px;">Not captured</span>`
         }
       </td>
-      <td>
-        <div class="select-field" style="width:200px;">
-          <select data-store-select="${p.id}">
-            <option value="">Assign a store...</option>
-            ${storeOptionsFor(p.requested_store_name)}
-          </select>
-        </div>
-      </td>
       <td style="display:flex; gap:6px;">
-        <button class="btn btn-primary btn-sm" data-approve="${p.id}">${ICONS.check.replace('<svg ', '<svg style="width:12px;height:12px;" ')} Approve</button>
+        <button class="btn btn-primary btn-sm" data-approve="${p.id}" data-has-store="${requestedStore ? "1" : "0"}">${ICONS.check.replace('<svg ', '<svg style="width:12px;height:12px;" ')} Approve</button>
         <button class="btn btn-ghost btn-sm" data-reject="${p.id}">Reject</button>
       </td>
     </tr>`;
@@ -149,7 +165,7 @@ async function renderPendingList(container, adminUser) {
         ? `<div class="empty-state">No pending registrations right now.</div>`
         : `<div class="table-wrap">
              <table class="data-table">
-               <thead><tr><th>Employee</th><th>Mobile</th><th>Requested Store</th><th>Registered</th><th>Location</th><th>Store</th><th>Action</th></tr></thead>
+               <thead><tr><th>Employee</th><th>Mobile</th><th>Requested Store</th><th>Registered</th><th>Location</th><th>Action</th></tr></thead>
                <tbody>${rows}</tbody>
              </table>
            </div>`
@@ -165,12 +181,21 @@ async function renderPendingList(container, adminUser) {
   container.querySelectorAll("[data-approve]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const id = btn.getAttribute("data-approve");
-      const select = container.querySelector(`[data-store-select="${id}"]`);
-      const storeId = select.value;
-      if (!storeId) {
-        showToast("Pick a store before approving.", "error");
-        return;
+      const hasStore = btn.getAttribute("data-has-store") === "1";
+      let storeId = null;
+
+      if (hasStore) {
+        const row = pending.find((p) => p.id === id);
+        storeId = row.requested_store_id;
+      } else {
+        const select = container.querySelector(`[data-store-select="${id}"]`);
+        storeId = select?.value;
+        if (!storeId) {
+          showToast("Pick a store before approving.", "error");
+          return;
+        }
       }
+
       btn.disabled = true;
       btn.textContent = "Approving...";
       try {
@@ -180,7 +205,7 @@ async function renderPendingList(container, adminUser) {
           employee_id: id, store_id: storeId, status: "active"
         });
         if (mapErr) throw mapErr;
-        showToast("Employee approved and assigned.", "success");
+        showToast("Employee approved.", "success");
         renderPendingList(container, adminUser);
       } catch (err) {
         showToast(err.message || "Could not approve this employee.", "error");

@@ -11,15 +11,14 @@ Supabase. No React/Next/Angular. No paid APIs.
 - **Login** — real Supabase Auth (email + password), same form for employees
   and admins; branches on `app_metadata.role` (`js/auth/context.js`).
 - **Self-registration** — open sign-up. The employee **chooses their own
-  Employee ID** (checked for uniqueness) and their **GPS location is captured
-  at registration time** and stored on the record — purely so an admin can
-  eyeball it ("View on Map" link) before approving. It does *not* set their
-  store or geofence; admin still manually assigns the store on approval, so
-  employees still never pick their own store. There's also a free-text
-  **"Your Store"** field the employee fills in themselves — shown to the
-  admin in Pending Approvals (and used to pre-select the matching option in
-  the store dropdown, if the name matches). Once you hand over the official
-  store list, this becomes a real dropdown instead of free text.
+  Employee ID**, picks their **store from a real dropdown** (the 42 active
+  stores you gave us — see "Store list" below), and their **GPS location is
+  captured** at registration time. Admin's job at approval is now just to
+  review the person + their captured location and approve — the store
+  assignment comes directly from what the employee picked, no separate
+  admin store-picker needed. (Older test registrations made before this
+  change only have free-text — those still get a one-off fallback picker in
+  Pending Approvals so they can still be approved.)
 - **Account deletion** — an admin can permanently delete any employee
   (Employees → open the employee → **Danger Zone** tab), and an employee can
   delete their own account (Home → **Account Settings** → Delete My Account).
@@ -42,7 +41,9 @@ Supabase. No React/Next/Angular. No paid APIs.
 - **Admin → Employees** (list + detail) — real data: store assignment, face
   enrollment status, attendance history, all from Supabase.
 - **Admin → Stores** — real list, and **Add Store now actually persists**,
-  including a working "Get Current Location" button.
+  including a working "Get Current Location" button. Stores with no
+  coordinates yet (all 42 imported stores start this way) show a "Set
+  Location" button to fill them in.
 - **Admin → Attendance → Daily View** and **→ Exceptions** — real queries.
 - **Admin → Face Management** — real enrollment-status list.
 - **Punch in/out + camera/GPS/face verification** — unchanged from the last
@@ -70,7 +71,8 @@ Run these once, in order, in the Supabase SQL Editor (skip any already run):
 2. `supabase/migration_003_registration_details.sql` — employee-chosen ID support + captured registration location columns
 3. `supabase/migration_004_enable_realtime.sql` — turns on Realtime for Live Attendance
 4. `supabase/migration_005_fix_punch_out_rls.sql` — fixes a bug where punch-out failed with "new row violates row-level security policy"
-5. `supabase/migration_006_requested_store.sql` — adds the free-text "Your Store" field at registration
+5. `supabase/migration_006_requested_store.sql` — adds the free-text "Your Store" field at registration (superseded by migration 007's real dropdown, but harmless to run)
+6. `supabase/migration_007_real_stores.sql` — imports your 42 real stores, makes store coordinates nullable, opens store visibility to anyone (needed for the registration dropdown), and adds `requested_store_id` so registration can reference a real store directly
 
 A brand-new project can just run `schema.sql` → `policies.sql` →
 `functions.sql` → `seed.sql` in order; those already include everything above.
@@ -91,6 +93,19 @@ That's it — `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KE
 are automatically available inside every Edge Function; you don't set any
 secrets manually. Until this is deployed, the "Delete Employee" / "Delete My
 Account" buttons in the app will fail with a function-not-found error.
+
+## Store list
+
+All 42 stores you gave us are imported by migration 007, using the code as
+both `store_code` and `store_name` (no separate display names were given —
+rename any of them anytime via Supabase Table Editor, or ask me to add a
+rename UI). **None of them have coordinates yet** — they'll show a
+"Coordinates not set" warning in Admin → Stores and in Pending Approvals
+until you set each one's location (Admin → Stores → **Set Location**, or the
+"Get Current Location" button if you're physically there). An employee
+assigned to a store with no coordinates can register and be approved fine,
+but punching in/out will show "Store Location Not Set Up" until it's
+configured.
 
 ## Testing end-to-end (at your real location)
 

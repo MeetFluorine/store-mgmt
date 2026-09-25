@@ -33,10 +33,16 @@ export async function renderStores(container) {
         </div>
         <span class="badge ${s.status === "active" ? "badge--success" : "badge--neutral"}">${s.status}</span>
       </div>
-      <div class="store-card__row"><span>Latitude</span><span>${s.latitude.toFixed(4)}</span></div>
-      <div class="store-card__row"><span>Longitude</span><span>${s.longitude.toFixed(4)}</span></div>
+      ${s.latitude == null || s.longitude == null
+        ? `<div class="store-card__row"><span class="badge badge--warning" style="margin:4px 0;">${ICONS.alertTriangle.replace('<svg ', '<svg style="width:11px;height:11px;" ')} Coordinates not set</span></div>`
+        : `<div class="store-card__row"><span>Latitude</span><span>${s.latitude.toFixed(4)}</span></div>
+           <div class="store-card__row"><span>Longitude</span><span>${s.longitude.toFixed(4)}</span></div>`
+      }
       <div class="store-card__row"><span>Allowed Radius</span><span>${s.allowed_radius} m</span></div>
       <div class="store-card__row"><span>Employees Assigned</span><span>${presentCounts[i]}</span></div>
+      <button class="btn btn-outline btn-sm btn-block" data-set-location="${s.id}" style="margin-top:10px;">
+        ${ICONS.mapPin} ${s.latitude == null ? "Set Location" : "Update Location"}
+      </button>
     </div>`).join("");
 
   container.innerHTML = `
@@ -55,6 +61,88 @@ export async function renderStores(container) {
 
   container.querySelector("#btn-add-store")?.addEventListener("click", () => {
     renderAddStoreForm(container.querySelector("#add-store-panel"), container);
+  });
+
+  container.querySelectorAll("[data-set-location]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const store = (stores || []).find((s) => s.id === btn.getAttribute("data-set-location"));
+      renderSetLocationForm(container.querySelector("#add-store-panel"), container, store);
+    });
+  });
+}
+
+function renderSetLocationForm(panel, container, store) {
+  panel.innerHTML = `
+    <div class="card card-pad" style="max-width:480px; margin-bottom:20px;">
+      <div class="card-header"><span class="card-title">${store.store_name} — Set Location</span></div>
+      <div style="display:flex; gap:10px; margin-bottom:14px;">
+        <div class="field-group" style="flex:1; margin-bottom:0;">
+          <label for="edit-store-lat">Latitude</label>
+          <input id="edit-store-lat" type="text" value="${store.latitude ?? ""}" placeholder="e.g. 28.4998" />
+        </div>
+        <div class="field-group" style="flex:1; margin-bottom:0;">
+          <label for="edit-store-lng">Longitude</label>
+          <input id="edit-store-lng" type="text" value="${store.longitude ?? ""}" placeholder="e.g. 77.0762" />
+        </div>
+      </div>
+      <button class="btn btn-outline btn-block" id="btn-get-location-edit" style="margin-bottom:14px;">${ICONS.mapPin} Get Current Location</button>
+      <div class="field-group">
+        <label for="edit-store-radius">Allowed Radius (meters)</label>
+        <input id="edit-store-radius" type="text" value="${store.allowed_radius || 100}" />
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-primary" id="btn-save-location">Save Location</button>
+        <button class="btn btn-ghost" id="btn-cancel-location">Cancel</button>
+      </div>
+    </div>
+  `;
+
+  panel.querySelector("#btn-get-location-edit").addEventListener("click", async () => {
+    const btn = panel.querySelector("#btn-get-location-edit");
+    btn.disabled = true;
+    btn.textContent = "Getting location...";
+    try {
+      const pos = await getCurrentPosition();
+      panel.querySelector("#edit-store-lat").value = pos.latitude.toFixed(6);
+      panel.querySelector("#edit-store-lng").value = pos.longitude.toFixed(6);
+      showToast(`Location captured (±${Math.round(pos.accuracy)}m)`, "success");
+    } catch (err) {
+      showToast(err.message || "Could not get your location.", "error");
+    }
+    btn.disabled = false;
+    btn.innerHTML = `${ICONS.mapPin} Get Current Location`;
+  });
+
+  panel.querySelector("#btn-cancel-location").addEventListener("click", () => { panel.innerHTML = ""; });
+
+  panel.querySelector("#btn-save-location").addEventListener("click", async () => {
+    const lat = parseFloat(panel.querySelector("#edit-store-lat").value);
+    const lng = parseFloat(panel.querySelector("#edit-store-lng").value);
+    const radius = parseInt(panel.querySelector("#edit-store-radius").value, 10) || 100;
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      showToast("Enter valid coordinates.", "error");
+      return;
+    }
+
+    const btn = panel.querySelector("#btn-save-location");
+    btn.disabled = true;
+    btn.textContent = "Saving...";
+
+    const { error } = await supabase.from("stores").update({
+      latitude: lat, longitude: lng, allowed_radius: radius, updated_at: new Date().toISOString()
+    }).eq("id", store.id);
+
+    if (error) {
+      showToast(error.message, "error");
+      btn.disabled = false;
+      btn.textContent = "Save Location";
+      return;
+    }
+
+    showToast("Location updated.", "success");
+    panel.innerHTML = "";
+    renderStores(container);
   });
 }
 

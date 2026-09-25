@@ -37,8 +37,10 @@ create policy "admins manage employees" on employees
   for all using (is_admin()) with check (is_admin());
 
 -- ---- stores ----
-create policy "authenticated users read stores" on stores
-  for select using (auth.role() = 'authenticated');
+-- Public read: registration needs to show the store list before
+-- the person has an account yet.
+create policy "anyone can read active stores" on stores
+  for select using (status = 'active');
 create policy "admins manage stores" on stores
   for all using (is_admin()) with check (is_admin());
 
