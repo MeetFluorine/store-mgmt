@@ -1,0 +1,86 @@
+/* =========================================================
+   Admin-specific styles
+   ========================================================= */
+
+/* ---- Bar chart (attendance trend) ---- */
+.bar-chart { display: flex; align-items: flex-end; gap: var(--sp-3); height: 180px; padding-top: var(--sp-2); }
+.bar-chart__col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; }
+.bar-chart__stack {
+  width: 100%;
+  max-width: 34px;
+  flex: 1;
+  display: flex;
+  flex-direction: column-reverse;
+  border-radius: 4px 4px 0 0;
+  overflow: hidden;
+}
+.bar-chart__seg { width: 100%; }
+.bar-chart__label { font-size: 11px; color: var(--text-muted); }
+
+.chart-legend { display: flex; gap: var(--sp-4); font-size: var(--fs-xs); color: var(--text-secondary); }
+.chart-legend__item { display: flex; align-items: center; gap: 6px; }
+.chart-legend__dot { width: 9px; height: 9px; border-radius: 50%; }
+
+/* ---- Donut chart (store-wise presence) ---- */
+.donut-wrap { display: flex; align-items: center; gap: var(--sp-5); }
+.donut-chart { position: relative; width: 130px; height: 130px; flex-shrink: 0; }
+.donut-chart svg { transform: rotate(-90deg); }
+.donut-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.donut-center__pct { font-size: 22px; font-weight: 800; }
+.donut-center__label { font-size: 10.5px; color: var(--text-muted); }
+
+.donut-legend { flex: 1; }
+.donut-legend .list-row__dot { width: 9px; height: 9px; }
+
+/* ---- Employee detail profile ---- */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-5);
+  margin-bottom: var(--sp-5);
+}
+.profile-header__name { font-size: var(--fs-lg); font-weight: 800; }
+.profile-header__id { color: var(--text-muted); font-size: var(--fs-sm); }
+.profile-header__badge { margin-left: auto; }
+.profile-header__actions { display: flex; gap: 8px; margin-left: 12px; }
+
+.back-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  margin-bottom: var(--sp-4);
+}
+.back-link svg { width: 15px; height: 15px; }
+.back-link:hover { color: var(--text-primary); }
+
+.detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-4); }
+.detail-item__label { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+.detail-item__value { font-size: var(--fs-sm); font-weight: 700; }
+
+/* ---- Store card grid ---- */
+.store-card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-4); }
+.store-card { padding: var(--sp-4); }
+.store-card__top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--sp-3); }
+.store-card__code { font-size: 11px; color: var(--text-muted); font-weight: 700; letter-spacing: .02em; }
+.store-card__name { font-size: var(--fs-md); font-weight: 700; margin-top: 2px; }
+.store-card__row { display: flex; justify-content: space-between; font-size: var(--fs-xs); color: var(--text-secondary); padding: 4px 0; }
+
+/* ---- Placeholder panel (features not yet built in this phase) ---- */
+.phase-note {
+  display: flex;
+  gap: 12px;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-md);
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-5);
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+}
+.phase-note svg { width: 18px; height: 18px; color: var(--color-warning); flex-shrink: 0; margin-top: 1px; }
+.phase-note strong { display: block; color: var(--text-primary); margin-bottom: 2px; }

@@ -1,0 +1,43 @@
+/* =========================================================
+   Responsive
+   ========================================================= */
+
+/* ---- Admin: collapse to single column below desktop ---- */
+@media (max-width: 1100px) {
+  .admin-grid { grid-template-columns: repeat(2, 1fr); }
+  .admin-grid--2col,
+  .admin-grid--split { grid-template-columns: 1fr; }
+  .store-card-grid { grid-template-columns: repeat(2, 1fr); }
+  .detail-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .admin-shell { grid-template-columns: 72px 1fr; }
+  .admin-sidebar .brand__text,
+  .admin-sidebar .nav-item span,
+  .admin-sidebar .nav-group-label,
+  .admin-sidebar .sidebar-footer__name,
+  .admin-sidebar .sidebar-footer__role { display: none; }
+  .admin-sidebar .nav-item { justify-content: center; }
+  .admin-sidebar .brand { justify-content: center; }
+  .topbar-search { width: 180px; }
+}
+
+@media (max-width: 720px) {
+  .admin-grid { grid-template-columns: repeat(2, 1fr); }
+  .admin-main { padding: var(--sp-4); }
+  .topbar-search { display: none; }
+  .store-card-grid { grid-template-columns: 1fr; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .donut-wrap { flex-direction: column; align-items: stretch; }
+}
+
+@media (max-width: 480px) {
+  .admin-grid { grid-template-columns: 1fr; }
+}
+
+/* ---- Employee: comfortable on very small phones ---- */
+@media (max-width: 360px) {
+  .stat-pair { grid-template-columns: 1fr; }
+  .summary-grid { grid-template-columns: 1fr; }
+}

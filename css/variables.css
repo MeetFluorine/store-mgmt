@@ -1,0 +1,87 @@
+/* =========================================================
+   Design Tokens — Shadowfax Store Attendance
+   ========================================================= */
+:root{
+  /* Brand */
+  --brand-orange: #E8501F;
+  --brand-orange-dark: #C43F16;
+  --sidebar-bg: #0B1220;
+  --sidebar-bg-alt: #111a2e;
+  --sidebar-text: #9aa5b8;
+  --sidebar-text-active: #ffffff;
+  --sidebar-border: #1c2740;
+
+  /* Surface */
+  --bg-app: #F3F4F7;
+  --bg-card: #ffffff;
+  --bg-subtle: #F7F8FA;
+  --border-default: #E4E7ED;
+  --border-strong: #D3D7E0;
+
+  /* Text */
+  --text-primary: #171B26;
+  --text-secondary: #5B6472;
+  --text-muted: #8A93A3;
+  --text-inverse: #ffffff;
+
+  /* Status */
+  --color-success: #17A24A;
+  --color-success-bg: #E7F8EE;
+  --color-success-border: #BCEBCF;
+
+  --color-danger: #E23B3B;
+  --color-danger-bg: #FDEAEA;
+  --color-danger-border: #F6C6C6;
+
+  --color-warning: #E6A317;
+  --color-warning-bg: #FDF4E1;
+  --color-warning-border: #F3DFA6;
+
+  --color-info: #2563EB;
+  --color-info-bg: #EAF1FE;
+  --color-info-border: #C6DAFB;
+
+  /* Chart accents */
+  --chart-present: #17A24A;
+  --chart-absent: #E23B3B;
+  --chart-short: #E6A317;
+  --chart-indore: #2563EB;
+  --chart-bhopal: #7C3AED;
+  --chart-jabalpur: #E6A317;
+  --chart-udaipur: #94A3B8;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+
+  /* Shadow */
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --shadow-pop: 0 8px 24px rgba(16, 24, 40, 0.12);
+
+  /* Spacing scale */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+
+  /* Type */
+  --font-base: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-base: 14.5px;
+  --fs-md: 16px;
+  --fs-lg: 19px;
+  --fs-xl: 24px;
+  --fs-2xl: 30px;
+
+  /* Layout */
+  --sidebar-width: 240px;
+  --topbar-height: 60px;
+  --header-height: 64px;
+}
