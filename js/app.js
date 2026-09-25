@@ -97,9 +97,8 @@ function initAdminChrome() {
     window.location.hash = "#/login";
   });
 
-  document.querySelector(".topbar-search").innerHTML = `${ICONS.search}<input placeholder="Search employee, store..." />`;
-
   document.getElementById("admin-topbar-right").innerHTML = `
+    <button class="icon-btn btn-mobile-search" id="btn-mobile-search" title="Search">${ICONS.search}</button>
     <div class="icon-btn">${ICONS.bell}<span class="icon-btn__dot">3</span></div>
     <div class="admin-user">
       <div class="avatar avatar--sm">${ADMIN_USER.initials}</div>
@@ -109,6 +108,111 @@ function initAdminChrome() {
   `;
 
   initAdminDrawer();
+  initGlobalSearch();
+}
+
+// ---------------------------------------------------------
+// Global admin search (employees + stores, from the topbar)
+// ---------------------------------------------------------
+let pendingStoreFilter = "";
+
+function debounce(fn, wait) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+}
+
+function searchInitials(name) {
+  return (name || "?").split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+}
+
+async function runGlobalSearch(q) {
+  const [{ data: employees }, { data: stores }] = await Promise.all([
+    supabase.from("employees").select("id, name, employee_code")
+      .or(`name.ilike.%${q}%,employee_code.ilike.%${q}%`).limit(5),
+    supabase.from("stores").select("id, store_code, store_name")
+      .or(`store_name.ilike.%${q}%,store_code.ilike.%${q}%`).limit(5)
+  ]);
+  return { employees: employees || [], stores: stores || [] };
+}
+
+function initGlobalSearch() {
+  const wrap = document.querySelector(".admin-topbar .topbar-search");
+  wrap.innerHTML = `
+    ${ICONS.search}
+    <input id="global-search-input" placeholder="Search employee, store..." autocomplete="off" />
+    <button type="button" class="btn-close-search" id="btn-close-search" title="Close">${ICONS.arrowLeft}</button>
+    <div class="search-results" id="global-search-results"></div>
+  `;
+  const input = wrap.querySelector("#global-search-input");
+  const results = wrap.querySelector("#global-search-results");
+
+  const runSearch = debounce(async () => {
+    const q = input.value.trim();
+    if (q.length < 2) { results.classList.remove("show"); return; }
+
+    let data;
+    try {
+      data = await runGlobalSearch(q);
+    } catch {
+      results.innerHTML = `<div class="search-results__empty">Search failed. Try again.</div>`;
+      results.classList.add("show");
+      return;
+    }
+    const { employees, stores } = data;
+
+    if (!employees.length && !stores.length) {
+      results.innerHTML = `<div class="search-results__empty">No matches for "${q}"</div>`;
+    } else {
+      results.innerHTML = `
+        ${employees.length ? `
+          <div class="search-results__group">Employees</div>
+          ${employees.map((e) => `
+            <div class="search-results__item" data-emp="${e.id}">
+              <div class="avatar avatar--sm">${searchInitials(e.name)}</div>
+              <div><div class="search-results__title">${e.name}</div><div class="search-results__sub">${e.employee_code}</div></div>
+            </div>`).join("")}
+        ` : ""}
+        ${stores.length ? `
+          <div class="search-results__group">Stores</div>
+          ${stores.map((s) => `
+            <div class="search-results__item" data-store="${s.store_code}">
+              <div class="store-row__icon" style="width:28px;height:28px;">${ICONS.store}</div>
+              <div><div class="search-results__title">${s.store_name}</div><div class="search-results__sub">${s.store_code}</div></div>
+            </div>`).join("")}
+        ` : ""}
+      `;
+    }
+    results.classList.add("show");
+  }, 250);
+
+  input.addEventListener("input", runSearch);
+  input.addEventListener("focus", () => { if (input.value.trim().length >= 2) results.classList.add("show"); });
+  input.addEventListener("keydown", (e) => { if (e.key === "Escape") { results.classList.remove("show"); input.blur(); } });
+  document.addEventListener("click", (e) => { if (!wrap.contains(e.target)) results.classList.remove("show"); });
+
+  // Mobile: search is a full-width overlay opened from a topbar icon.
+  document.getElementById("btn-mobile-search")?.addEventListener("click", () => {
+    document.querySelector(".admin-topbar").classList.add("search-open");
+    input.focus();
+  });
+  wrap.querySelector("#btn-close-search").addEventListener("click", () => {
+    document.querySelector(".admin-topbar").classList.remove("search-open");
+    input.value = "";
+    results.classList.remove("show");
+  });
+
+  results.addEventListener("click", (e) => {
+    const empEl = e.target.closest("[data-emp]");
+    const storeEl = e.target.closest("[data-store]");
+    if (empEl) {
+      window.location.hash = `#/admin/employees/${empEl.getAttribute("data-emp")}`;
+    } else if (storeEl) {
+      pendingStoreFilter = storeEl.getAttribute("data-store");
+      window.location.hash = `#/admin/stores`;
+    }
+    results.classList.remove("show");
+    input.value = "";
+  });
 }
 
 // Curated subset of ADMIN_NAV shown on the mobile bottom bar. "more" opens
@@ -880,7 +984,7 @@ async function handleRoute() {
       if (rest[1]) renderEmployeeDetail(adminMain, rest[1]);
       else renderEmployeeList(adminMain);
     }
-    else if (sub === "stores") renderStores(adminMain);
+    else if (sub === "stores") { renderStores(adminMain, pendingStoreFilter); pendingStoreFilter = ""; }
     else if (sub === "attendance") renderAttendanceSection(adminMain, rest[1] || "daily");
     else if (sub === "reports") renderReports(adminMain);
     else if (sub === "face-management") renderFaceManagement(adminMain);

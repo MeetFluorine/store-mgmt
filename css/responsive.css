@@ -71,6 +71,24 @@
   .admin-main { padding: var(--sp-4); }
   .topbar-search { display: none; }
   .topbar-search.page-search { display: flex; } /* in-page search stays visible */
+  .btn-mobile-search { display: flex; }
+
+  /* Tapping the search icon expands the topbar search to a full-width overlay */
+  .admin-topbar.search-open .btn-hamburger,
+  .admin-topbar.search-open .topbar-right { display: none; }
+  .admin-topbar.search-open .topbar-search {
+    display: flex;
+    position: absolute;
+    inset: 0;
+    background: var(--bg-card);
+    padding: 0 var(--sp-4);
+    z-index: 20;
+  }
+  .btn-close-search { display: none; }
+  .admin-topbar.search-open .btn-close-search { display: flex; align-items: center; color: var(--text-secondary); }
+  .admin-topbar { position: sticky; }
+
+  .store-card-grid { grid-template-columns: 1fr; }
   .store-card-grid { grid-template-columns: 1fr; }
   .detail-grid { grid-template-columns: 1fr; }
   .donut-wrap { flex-direction: column; align-items: stretch; }

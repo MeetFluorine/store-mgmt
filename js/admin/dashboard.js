@@ -102,7 +102,7 @@ function barChart(trend) {
   return `<div class="bar-chart">${cols}</div>`;
 }
 
-function donutChart(storePresence) {
+function donutSvg(storePresence) {
   const total = storePresence.reduce((s, x) => s + x.total, 0) || 1;
   const present = storePresence.reduce((s, x) => s + x.present, 0);
   const pct = Math.round((present / total) * 100);
@@ -118,21 +118,88 @@ function donutChart(storePresence) {
     return seg;
   }).join("");
 
-  const legend = storePresence.map((s, i) => `
+  return { html: `
+    <div class="donut-chart">
+      <svg viewBox="0 0 130 130" width="130" height="130">${segs}</svg>
+      <div class="donut-center"><div class="donut-center__pct">${pct}%</div><div class="donut-center__label">Present</div></div>
+    </div>`, colors };
+}
+
+const STORE_PRESENCE_PAGE_SIZE = 6;
+
+function storePresenceCard(storePresence) {
+  return `
+    <div class="card-header">
+      <span class="card-title">Store-wise Presence</span>
+      <div class="select-field" style="width:150px;">
+        <select id="store-presence-filter">
+          <option value="all">All Stores</option>
+          <option value="present">With Attendance</option>
+          <option value="none">No Attendance</option>
+        </select>
+      </div>
+    </div>
+    <div class="donut-wrap" id="store-presence-donut"></div>
+  `;
+}
+
+function initStorePresence(root, storePresence) {
+  const { html: donutHtml, colors } = donutSvg(storePresence);
+  const donutWrap = root.querySelector("#store-presence-donut");
+  donutWrap.innerHTML = `
+    ${donutHtml}
+    <div class="donut-legend">
+      <div id="store-presence-list"></div>
+      <button class="btn btn-ghost btn-sm btn-block" id="store-presence-more" style="margin-top:4px; display:none;"></button>
+    </div>`;
+
+  const legendRow = (s) => {
+    const i = storePresence.indexOf(s);
+    return `
     <div class="list-row">
       <span class="list-row__dot" style="background:${colors[i % colors.length]}"></span>
       <div class="list-row__main"><div class="list-row__title">${s.name.replace(" Store", "")}</div></div>
       <div class="list-row__value">${s.present}/${s.total}</div>
-    </div>`).join("");
-
-  return `
-    <div class="donut-wrap">
-      <div class="donut-chart">
-        <svg viewBox="0 0 130 130" width="130" height="130">${segs}</svg>
-        <div class="donut-center"><div class="donut-center__pct">${pct}%</div><div class="donut-center__label">Present</div></div>
-      </div>
-      <div class="donut-legend">${legend || `<div class="text-muted" style="font-size:12.5px;">No stores yet.</div>`}</div>
     </div>`;
+  };
+
+  let filter = "all";
+  let expanded = false;
+
+  function apply() {
+    let list = storePresence;
+    if (filter === "present") list = list.filter((s) => s.present > 0);
+    else if (filter === "none") list = list.filter((s) => s.present === 0);
+
+    const shown = expanded ? list : list.slice(0, STORE_PRESENCE_PAGE_SIZE);
+    root.querySelector("#store-presence-list").innerHTML = shown.length
+      ? shown.map(legendRow).join("")
+      : `<div class="text-muted" style="font-size:12.5px; padding:6px 0;">No stores match this filter.</div>`;
+
+    const moreBtn = root.querySelector("#store-presence-more");
+    if (list.length > STORE_PRESENCE_PAGE_SIZE) {
+      moreBtn.style.display = "block";
+      moreBtn.textContent = expanded ? "Show less" : `Show all ${list.length} stores`;
+    } else {
+      moreBtn.style.display = "none";
+    }
+  }
+
+  root.querySelector("#store-presence-filter").addEventListener("change", (e) => {
+    filter = e.target.value;
+    expanded = false;
+    apply();
+  });
+  root.querySelector("#store-presence-more").addEventListener("click", () => {
+    expanded = !expanded;
+    apply();
+  });
+
+  if (storePresence.length === 0) {
+    donutWrap.innerHTML = `<div class="text-muted" style="font-size:12.5px;">No stores yet.</div>`;
+    return;
+  }
+  apply();
 }
 
 function recentActivity(events) {
@@ -226,9 +293,8 @@ export async function renderDashboard(container) {
         </div>
         ${barChart(trend)}
       </div>
-      <div class="card card-pad">
-        <div class="card-header"><span class="card-title">Store-wise Presence</span></div>
-        ${donutChart(storePresence)}
+      <div class="card card-pad" id="store-presence-card">
+        ${storePresenceCard(storePresence)}
       </div>
     </div>
 
@@ -246,6 +312,8 @@ export async function renderDashboard(container) {
       </div>
     </div>
   `;
+
+  initStorePresence(container.querySelector("#store-presence-card"), storePresence);
 
   container.querySelector("#btn-export-today")?.addEventListener("click", () => {
     exportToCsv("todays-attendance.csv", todayRows.map((r) => ({

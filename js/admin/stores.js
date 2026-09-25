@@ -6,7 +6,7 @@ import { ICONS } from "../utils/icons.js";
 import { showToast } from "../utils/notifications.js";
 import { getCurrentPosition } from "../gps/location.js";
 
-export async function renderStores(container) {
+export async function renderStores(container, presetQuery = "") {
   container.innerHTML = `<div class="empty-state">Loading stores...</div>`;
 
   const { data: stores, error } = await supabase
@@ -25,7 +25,7 @@ export async function renderStores(container) {
   }));
 
   const cards = (stores || []).map((s, i) => `
-    <div class="card store-card">
+    <div class="card store-card" data-store-name="${(s.store_name || "").toLowerCase()}" data-store-code="${(s.store_code || "").toLowerCase()}">
       <div class="store-card__top">
         <div>
           <div class="store-card__code">${s.store_code}</div>
@@ -52,12 +52,32 @@ export async function renderStores(container) {
         <p>${(stores || []).length} store${(stores || []).length === 1 ? "" : "s"} configured</p>
       </div>
       <div class="page-header__actions">
+        <div class="topbar-search page-search">${ICONS.search}<input id="store-search" placeholder="Search store name or code..." /></div>
         <button class="btn btn-primary btn-sm" id="btn-add-store">${ICONS.plus} Add Store</button>
       </div>
     </div>
     <div id="add-store-panel"></div>
-    <div class="store-card-grid">${cards || `<div class="empty-state">No stores yet.</div>`}</div>
+    <div id="store-empty-state" class="empty-state" style="display:none;">No stores match your search.</div>
+    <div class="store-card-grid" id="store-grid">${cards || `<div class="empty-state">No stores yet.</div>`}</div>
   `;
+
+  const searchInput = container.querySelector("#store-search");
+  const applyStoreFilter = (raw) => {
+    const q = raw.trim().toLowerCase();
+    const cardEls = container.querySelectorAll("#store-grid .store-card");
+    let visible = 0;
+    cardEls.forEach((el) => {
+      const match = !q || el.getAttribute("data-store-name").includes(q) || el.getAttribute("data-store-code").includes(q);
+      el.style.display = match ? "" : "none";
+      if (match) visible++;
+    });
+    container.querySelector("#store-empty-state").style.display = (visible === 0 && cardEls.length > 0) ? "block" : "none";
+  };
+  searchInput.addEventListener("input", (e) => applyStoreFilter(e.target.value));
+  if (presetQuery) {
+    searchInput.value = presetQuery;
+    applyStoreFilter(presetQuery);
+  }
 
   container.querySelector("#btn-add-store")?.addEventListener("click", () => {
     renderAddStoreForm(container.querySelector("#add-store-panel"), container);
