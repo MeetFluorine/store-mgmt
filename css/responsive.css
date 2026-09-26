@@ -21,6 +21,16 @@
   .admin-sidebar .nav-item { justify-content: center; }
   .admin-sidebar .brand { justify-content: center; }
   .topbar-search { width: 180px; }
+
+  /* Icon-rail sidebar is only 72px wide — stack avatar + logout instead of
+     a horizontal row, otherwise the logout button (margin-left:auto) has
+     nowhere to go and spills out past the sidebar into the page content. */
+  .admin-sidebar .sidebar-footer {
+    flex-direction: column;
+    gap: 8px;
+    padding: var(--sp-3) var(--sp-2);
+  }
+  .admin-sidebar .sidebar-footer__logout { margin-left: 0; }
 }
 
 /* ---- Phones: sidebar becomes a slide-in drawer, bottom nav takes over ---- */
@@ -52,6 +62,8 @@
   .admin-sidebar .sidebar-footer__role { display: block; }
   .admin-sidebar .nav-item { justify-content: flex-start; }
   .admin-sidebar .brand { justify-content: flex-start; }
+  .admin-sidebar .sidebar-footer { flex-direction: row; padding: var(--sp-3) var(--sp-4); }
+  .admin-sidebar .sidebar-footer__logout { margin-left: auto; }
 
   .admin-topbar { padding: 0 var(--sp-4); }
   .admin-main { padding: var(--sp-4); padding-bottom: 92px; }
@@ -89,13 +101,22 @@
   .admin-topbar { position: sticky; }
 
   .store-card-grid { grid-template-columns: 1fr; }
-  .store-card-grid { grid-template-columns: 1fr; }
   .detail-grid { grid-template-columns: 1fr; }
   .donut-wrap { flex-direction: column; align-items: stretch; }
 }
 
 @media (max-width: 480px) {
-  .admin-grid { grid-template-columns: 1fr; }
+  .admin-grid { grid-template-columns: repeat(2, 1fr); gap: var(--sp-3); }
+  .kpi-card { padding: var(--sp-3); gap: var(--sp-2); }
+  .kpi-icon { width: 32px; height: 32px; }
+  .kpi-icon svg { width: 16px; height: 16px; }
+  .kpi-value { font-size: 18px; }
+  .kpi-label { font-size: 11px; }
+
+  /* Keep the topbar from crowding: name text collapses, avatar still opens the logout menu */
+  .admin-user span,
+  .admin-user > svg { display: none; }
+  .admin-user__menu { min-width: 130px; }
 }
 
 /* ---- Employee: comfortable on very small phones ---- */

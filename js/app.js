@@ -100,12 +100,29 @@ function initAdminChrome() {
   document.getElementById("admin-topbar-right").innerHTML = `
     <button class="icon-btn btn-mobile-search" id="btn-mobile-search" title="Search">${ICONS.search}</button>
     <div class="icon-btn">${ICONS.bell}<span class="icon-btn__dot">3</span></div>
-    <div class="admin-user">
+    <div class="admin-user" id="admin-user-trigger">
       <div class="avatar avatar--sm">${ADMIN_USER.initials}</div>
       <span>${ADMIN_USER.name}</span>
       ${ICONS.chevronDown}
+      <div class="admin-user__menu" id="admin-user-menu">
+        <button type="button" id="btn-topbar-logout">${ICONS.logout} Logout</button>
+      </div>
     </div>
   `;
+
+  const userTrigger = document.getElementById("admin-user-trigger");
+  const userMenu = document.getElementById("admin-user-menu");
+  userTrigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    userMenu.classList.toggle("show");
+  });
+  document.addEventListener("click", () => userMenu.classList.remove("show"));
+  document.getElementById("btn-topbar-logout").addEventListener("click", async () => {
+    teardownLiveAttendance();
+    await logout();
+    clearContext();
+    window.location.hash = "#/login";
+  });
 
   initAdminDrawer();
   initGlobalSearch();

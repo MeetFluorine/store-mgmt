@@ -295,7 +295,35 @@
 .admin-user {
   display: flex; align-items: center; gap: 8px;
   font-size: var(--fs-sm); font-weight: 600;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
 }
+.admin-user__menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 150px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pop);
+  z-index: 30;
+  padding: 6px;
+}
+.admin-user__menu.show { display: block; }
+.admin-user__menu button {
+  width: 100%;
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--color-danger);
+  text-align: left;
+}
+.admin-user__menu button:hover { background: var(--color-danger-bg); }
 
 /* ---- Select / filter dropdown ---- */
 .select-field, .date-field {
